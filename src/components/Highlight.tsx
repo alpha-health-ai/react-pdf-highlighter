@@ -16,6 +16,7 @@ interface Props {
     emoji: string;
     text: string;
   };
+  rectClass?: string;
   isScrolledTo: boolean;
 }
 
@@ -28,8 +29,8 @@ export class Highlight extends Component<Props> {
       onMouseOut,
       comment,
       isScrolledTo,
+      rectClass
     } = this.props;
-
     const { rects, boundingRect } = position;
 
     return (
@@ -55,7 +56,7 @@ export class Highlight extends Component<Props> {
               onClick={onClick}
               key={index}
               style={rect}
-              className={`Highlight__part`}
+              className={`Highlight__part ${rectClass || ''}`}
             />
           ))}
         </div>
