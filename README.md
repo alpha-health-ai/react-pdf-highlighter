@@ -1,6 +1,9 @@
-☕️ [Buy me a coffee](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SC4D2NS8G2JJ8&source=url)
-
-![Node CI](https://github.com/agentcooper/react-pdf-highlighter/workflows/Node%20CI/badge.svg)
+## akasa deployment instructions
+1. Update the version inside package.json to a larger version number.
+2. Login to codeartifacts 
+```aws codeartifact login --tool npm --repository akasa --domain akasa --domain-owner 025412125743```
+3. Run command to publish. 
+```npm publish```
 
 ## react-pdf-highlighter
 
