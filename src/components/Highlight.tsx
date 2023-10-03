@@ -12,6 +12,10 @@ interface Props {
   onClick?: () => void;
   onMouseOver?: () => void;
   onMouseOut?: () => void;
+  onMouseDown?: () => void;
+  onMouseUp?: () => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
   comment: {
     emoji: string;
     text: string;
@@ -27,6 +31,10 @@ export class Highlight extends Component<Props> {
       onClick,
       onMouseOver,
       onMouseOut,
+      onMouseDown,
+      onMouseUp,
+      onDragStart,
+      onDragEnd,
       comment,
       isScrolledTo,
       rectClass
@@ -54,6 +62,10 @@ export class Highlight extends Component<Props> {
               onMouseOver={onMouseOver}
               onMouseOut={onMouseOut}
               onClick={onClick}
+              onMouseDown={onMouseDown}
+              onMouseUp={onMouseUp}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
               key={index}
               style={rect}
               className={`Highlight__part ${rectClass || ''}`}
