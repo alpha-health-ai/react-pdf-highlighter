@@ -53,6 +53,7 @@ interface State<T_HT> {
   tipChildren: JSX.Element | null;
   isAreaSelectionInProgress: boolean;
   scrolledToHighlightId: string;
+  hasMouse: boolean;
 }
 
 interface Props<T_HT> {
@@ -101,6 +102,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     tip: null,
     tipPosition: null,
     tipChildren: null,
+    hasMouse: false
   };
 
   eventBus = new EventBus();
@@ -140,16 +142,19 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       const { ownerDocument: doc } = ref;
       eventBus.on("textlayerrendered", this.onTextLayerRendered);
       eventBus.on("pagesinit", this.onDocumentReady);
-      doc.addEventListener("selectionchange", this.onSelectionChange);
       doc.addEventListener("keydown", this.handleKeyDown);
+      doc.addEventListener("mouseup",this.onMouseUp);
+      document.addEventListener("mouseup",this.clearMouseCapture);
+
       doc.defaultView?.addEventListener("resize", this.debouncedScaleValue);
       if (observer) observer.observe(ref);
 
       this.unsubscribe = () => {
         eventBus.off("pagesinit", this.onDocumentReady);
         eventBus.off("textlayerrendered", this.onTextLayerRendered);
-        doc.removeEventListener("selectionchange", this.onSelectionChange);
         doc.removeEventListener("keydown", this.handleKeyDown);
+        doc.removeEventListener("mouseup",this.onMouseUp);
+        document.removeEventListener("mouseup",this.clearMouseCapture);
         doc.defaultView?.removeEventListener(
           "resize",
           this.debouncedScaleValue
@@ -158,6 +163,17 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       };
     }
   };
+
+  clearMouseCapture = () => {
+    this.setState({ hasMouse: false });
+  }
+
+  onMouseUp = () => {
+    if(this.state.hasMouse) {
+      this.onSelectionChange();
+      this.setState({ hasMouse: false });
+    }
+  }
 
   componentDidUpdate(prevProps: Props<T_HT>) {
     if (prevProps.pdfDocument !== this.props.pdfDocument) {
@@ -424,7 +440,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
 
     const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-
     if (selection.isCollapsed) {
       this.setState({ isCollapsed: true });
       return;
@@ -443,7 +458,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       range,
     });
 
-    this.debouncedAfterSelection();
+    this.afterSelection();
   };
 
   onScroll = () => {
@@ -462,6 +477,8 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   };
 
   onMouseDown: PointerEventHandler = (event) => {
+    this.setState({ hasMouse: true });
+
     if (!isHTMLElement(event.target)) {
       return;
     }
@@ -483,19 +500,16 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     const { onSelectionFinished } = this.props;
 
     const { isCollapsed, range } = this.state;
-
     if (!range || isCollapsed) {
       return;
     }
 
     const pages = getPagesFromRange(range);
-
     if (!pages || pages.length === 0) {
       return;
     }
 
     const rects = getClientRects(range, pages);
-
     if (rects.length === 0) {
       return;
     }
@@ -530,8 +544,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     );
   };
 
-  debouncedAfterSelection: () => void = debounce(this.afterSelection, 500);
-
   toggleTextSelection(flag: boolean) {
     this.viewer.viewer!.classList.toggle(
       "PdfHighlighter--disable-selection",
@@ -545,7 +557,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
   };
 
-  debouncedScaleValue: () => void = debounce(this.handleScaleValue, 500);
+  debouncedScaleValue: () => void = debounce(this.handleScaleValue, 100);
 
   render() {
     const { onSelectionFinished, enableAreaSelection } = this.props;
@@ -606,7 +618,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
                     { image },
                     () => this.hideTipAndSelection(),
                     () => {
-                      console.log("setting ghost highlight", scaledPosition);
                       this.setState(
                         {
                           ghostHighlight: {

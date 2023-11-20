@@ -9,13 +9,14 @@ interface Props {
     boundingRect: LTWHP;
     rects: Array<LTWHP>;
   };
-  onClick?: () => void;
-  onMouseOver?: () => void;
-  onMouseOut?: () => void;
-  onMouseDown?: () => void;
-  onMouseUp?: () => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
+  draggable?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseOver?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseOut?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseUp?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: (e: React.DragEvent<HTMLDivElement>) => void;
   comment: {
     emoji: string;
     text: string;
@@ -28,6 +29,7 @@ export class Highlight extends Component<Props> {
   render() {
     const {
       position,
+      draggable,
       onClick,
       onMouseOver,
       onMouseOut,
@@ -59,6 +61,7 @@ export class Highlight extends Component<Props> {
         <div className="Highlight__parts">
           {rects.map((rect, index) => (
             <div
+              draggable={draggable ? "true" : undefined}
               onMouseOver={onMouseOver}
               onMouseOut={onMouseOut}
               onClick={onClick}
