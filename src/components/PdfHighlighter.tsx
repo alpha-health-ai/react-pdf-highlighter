@@ -29,7 +29,7 @@ import { scaledToViewport, viewportToScaled } from "../lib/coordinates";
 import MouseSelection from "./MouseSelection";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import TipContainer from "./TipContainer";
-import ReactDOM from "react-dom";
+import { createRoot, Root } from "react-dom/client";
 import debounce from "lodash.debounce";
 import getAreaAsPng from "../lib/get-area-as-png";
 import getBoundingRect from "../lib/get-bounding-rect";
@@ -117,7 +117,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   containerNode?: HTMLDivElement | null = null;
   containerNodeRef: RefObject<HTMLDivElement>;
   highlightRoots: {
-    [page: number]: { reactRoot: Element; container: Element };
+    [page: number]: { reactRoot: Root; container: Element };
   } = {};
   unsubscribe = () => {};
 
@@ -458,7 +458,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       range,
     });
 
-    this.afterSelection();
+    this.afterSelection(false,range);
   };
 
   onScroll = () => {
@@ -496,10 +496,8 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
   };
 
-  afterSelection = () => {
+  afterSelection = (isCollapsed: boolean, range: Range|null) => {
     const { onSelectionFinished } = this.props;
-
-    const { isCollapsed, range } = this.state;
     if (!range || isCollapsed) {
       return;
     }
@@ -526,7 +524,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       text: range.toString(),
     };
     const scaledPosition = this.viewportPositionToScaled(viewportPosition);
-
     this.setTip(
       viewportPosition,
       onSelectionFinished(
@@ -651,7 +648,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       } else {
         const highlightLayer = this.findOrCreateHighlightLayer(pageNumber);
         if (highlightLayer) {
-          const reactRoot = highlightLayer;
+          const reactRoot = createRoot(highlightLayer);
           this.highlightRoots[pageNumber] = {
             reactRoot,
             container: highlightLayer,
@@ -662,10 +659,10 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
   }
 
-  private renderHighlightLayer(root: Element, pageNumber: number) {
+  private renderHighlightLayer(root: Root, pageNumber: number) {
     const { highlightTransform, highlights } = this.props;
     const { tip, scrolledToHighlightId } = this.state;
-    ReactDOM.render(
+    root.render(
       <HighlightLayer
         highlightsByPage={this.groupHighlightsByPage(highlights)}
         pageNumber={pageNumber.toString()}
@@ -679,6 +676,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
         showTip={this.showTip.bind(this)}
         setState={this.setState.bind(this)}
       />
-    ,root);
+    );
   }
 }
